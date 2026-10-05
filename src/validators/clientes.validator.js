@@ -23,7 +23,35 @@ const validarCliente = [
     .bail()
     .trim()
     .isEmail()
-    .withMessage('Informe um e-mail válido')    
+    .withMessage('Informe um e-mail válido'),
+    
+    body('telefone')
+    .exists({checkFalsy: true})
+    .withMessage('O telefone é obrigatório')
+    .bail()
+    .isLength({min:10, max:11})
+    .withMessage('O telefone deve ter DDD e 10 ou 11 dígitos'),
+
+    body('ativo')
+    .optional()
+    .isBoolean() //é booleano?
+    .withMessage('O campo ativo deve ser verdadeiro ou falso')
+    .toBoolean(), //converte para booleano
+
+    body('data_nascimento')
+    .if(body('tipo').equals('PF')) //só valida se for PF
+    .exists({checkFalsy:true})
+    .withMessage('A data de nascimento é obrigatório para cliente Pessoa Física')
+    .bail()
+    .isISO8601({strict: true, strictSeparator:true}) //é uma data?
+    .withMessage('Use uma data válida no formato AAAA-MM-DD'),
+
+    body('limite_credito')
+    .optional()
+    .isFloat({min:0, max: 999999.99})
+    .withMessage(`O limite de crédito deve ser um valor positivo e menor 
+        que 1 milhão`)
+    .toFloat()
 ]
 
 module.exports = {validarCliente}
