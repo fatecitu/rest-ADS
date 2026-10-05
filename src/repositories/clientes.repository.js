@@ -30,7 +30,7 @@ async function buscarPorId(id) {
     if (linhas.length === 0) { return null }
     return montarCliente(linhas[0]) //retornamos o primeiro resultado
 }
-async function criar(dadosCliente){
+async function criar(dadosCliente) {
     const cliente = {
         tipo: dadosCliente.tipo,
         nome: dadosCliente.nome,
@@ -52,5 +52,41 @@ async function criar(dadosCliente){
     const [resultado] = await pool.query(sql, [cliente])
     return buscarPorId(resultado.insertId)
 }
+async function atualizar(id, dadosCliente) {
+    const conexao = await pool.getConnection()
+    const pessoaFisica = dadosCliente.tipo === 'PF'
+    const pessoaJuridica = dadosCliente.tipo === 'PJ'
+    try {
+        await conexao.beginTransaction() //inicia a transação
+        const [resultadoCliente] = await conexao.execute(`UPDATE clientes 
+SET tipo=?, nome=?, email=?, telefone=?, cpf=?, cnpj=?, data_nascimento=?, 
+    razao_social=?, nome_fantasia=?, inscricao_estadual=?, estado_civil=?, 
+    ativo=?, limite_credito=?, observacoes=? WHERE id=?`, [dadosCliente.tipo,
+        dadosCliente.nome, dadosCliente.email, dadosCliente.telefone,
+        pessoaFisica ? dadosCliente.cpf : null,
+        pessoaJuridica ? dadosCliente.cnpj : null,
+        pessoaFisica ? dadosCliente.data_nascimento : null,
+        pessoaJuridica ? dadosCliente.razao_social : null,
+        pessoaJuridica ? dadosCliente.nome_fantasia : null,
+        pessoaJuridica ? dadosCliente.inscricao_estadual : null,
+        pessoaFisica ? dadosCliente.estado_civil : null,
+        dadosCliente.ativo ?? true, dadosCliente.limite_credito ?? 0,
+        dadosCliente.observacoes || null, id])
 
-module.exports = { listar, buscarPorId, criar }
+        if (resultadoCliente.affectedRows === 0) {//nenhuma linha foi 'afetada'
+            await conexao.rollback() //daremos rollback, pois ocorreu algo!
+            return null
+        }
+        await conexao.commit() //senão, damos commit e devolvemos o item
+        return buscarPorId(id)
+    } catch (erro) {
+        await conexao.rollback() //por garantia, damos rollback
+        throw erro;
+    } finally { conexao.release() }
+}
+async function remover(id){
+    const [resultado] = await pool.execute('DELETE FROM clientes where id=?',
+          [id])
+    return resultado.affectedRows > 0
+}
+module.exports = { listar, buscarPorId, criar, atualizar, remover }
