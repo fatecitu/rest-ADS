@@ -1,5 +1,6 @@
 const { randomUUID } = require('node:crypto')
-const pool = require('../config/database')
+const { pool } = require('../config/database')
+
 
 const consulta = `SELECT CAST(id as CHAR) as id, email, status, tipo,
 data_criacao as dataCriacao, data_alteracao as dataAlteracao from usuarios`;
@@ -9,7 +10,7 @@ async function listar(){
     return linhas
 }
 async function buscarPorId(id){
-     const [linhas] = await pool.query(`${consulta} WHERE id = ?`, [id])
+     const [linhas] = await pool.execute(`${consulta} WHERE id = ?`, [id])
     return linhas[0] || null
 }
 async function buscarParaLogin(email){
