@@ -18,3 +18,15 @@ CREATE TABLE clientes(
     atualizado_em timestamp not null default current_timestamp on update current_timestamp,
     constraint ck_cliente_pfpj check ((tipo='PF' AND cpf is not null and cnpj is null) OR (tipo='PJ' and cnpj is not null and cpf is null))
 );
+
+CREATE TABLE usuarios(
+    id UUID NOT NULL DEFAULT (UUID()),
+    email VARCHAR(255) NOT NULL,
+    senha_hash VARCHAR(255) NOT NULL,
+    status enum('ativo','inativo') NOT NULL DEFAULT 'ativo',
+    tipo enum('Admin','User') NOT NULL DEFAULT 'User',
+    data_criacao DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    data_alteracao DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) 
+                   ON UPDATE CURRENT_TIMESTAMP(6),
+    PRIMARY KEY (id), CONSTRAINT uk_usuarios_email UNIQUE (email)               
+);

@@ -2,6 +2,7 @@ require('dotenv').config() //carrega as definições do .env
 const express = require('express')
 const path = require('path')
 const clientesRoutes = require('./routes/clientes.routes')
+const usuariosRoutes = require('./routes/usuarios.routes')
 
 const app = express()
 app.use(express.json())
@@ -10,10 +11,11 @@ app.use(express.static(path.join(__dirname, '..', 'public')))
 app.get('/api', (req, res)=> {
     res.json({
         mensagem: 'API REST Fatec',
-        versao: '1.0.0'
+        versao: '1.1.0'
     })
 })
 app.use('/api/clientes', clientesRoutes)
+app.use('/api/usuarios', usuariosRoutes)
 
 app.use((req, res)=> {
     res.status(404).json({
